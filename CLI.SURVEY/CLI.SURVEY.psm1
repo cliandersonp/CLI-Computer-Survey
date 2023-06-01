@@ -1,7 +1,8 @@
 function Get-CLIComputerSurvey {
   # Define parameters.
   param(
-    [Microsoft.Management.Infrastructure.CimSession]$cimsession
+    # [Microsoft.Management.Infrastructure.CimSession]$cimsession
+    $cimsession
   )
 
   # Data Validation Checking. Script should only work if a cimsession is provided
@@ -60,6 +61,14 @@ function Get-CLIComputerSurvey {
 
     $memorySlots = Get-CimInstance -CimSession $cimsession Win32_PhysicalMemoryArray -Property MemoryDevices | Select-Object -ExpandProperty MemoryDevices
     
+    # Secondary Definitions
+    if (-not $assetTag){
+      $hostname = (HOSTNAME.EXE).tostring()
+      if ($hostname -match "\w\w\w-[dlw]-\d\d\d\d") {
+        $assetTag = $hostname -replace "[^0-9]", ""
+      }
+    }
+
     # Adding Object to $outputArray
     $OutputArray += [PSCustomObject]@{
       UsedBy = $usedBy
@@ -76,7 +85,9 @@ function Get-CLIComputerSurvey {
       IncludesCamera = $includesCamera
       MemorySlots = $memorySlots
     }
-  }
+  } # End Foreach-Object
+
+  $OutputArray
 }
 
 
