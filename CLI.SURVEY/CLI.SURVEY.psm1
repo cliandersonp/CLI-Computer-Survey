@@ -144,8 +144,79 @@ function Get-CLIComputerSurvey {
     }
   } # End Foreach-Object
 
-  $OutputArray
+  return $OutputArray
 }
 
 
-Export-ModuleMember -Function Get-CLIComputerSurvey
+function Export-CLIHardwareSurvey {
+  param (
+    [Parameter(ValueFromPipeline=$true)][System.Object]$InputObject,
+    $FileName = "$((HOSTNAME.EXE).tostring())-trk-comp.csv"
+  )
+  
+  # Data Validation.
+  # Checks that the provided filename is legal
+  if (-not ($FileName -match "^[\w,\s-]+\.[A-Za-z]{3}$")){
+    Write-Error -Category InvalidArgument -Message "Illegal Filename"
+    return
+  }
+
+  # To Check if $InputObject is valid, it should possess all the appropriate parameters. 
+  $InputParameters = @(
+  "UsedBy"
+  "AssetTag"
+  "Make"
+  "Model"
+  "SerialNumber"
+  "FirstLogon"
+  "CPU"
+  "GPU"
+  "TotalStorage"
+  "TotalMemory"
+  "OperatingSystemBuild"
+  "IncludesCamera"
+  "MemorySlots"
+  )
+
+  $InputParameters | ForEach-Object {
+    if (-not ($InputObject.PSObject.Properties.name -match $_)){
+      Write-Error -Category InvalidData -Message "Required parameter $_ not found in input object."
+      return
+    }
+  }
+
+  # process input opbject.
+  $InputObject | ForEach-Object -Begin {
+    $trkCompFieldHeadings = @(
+      "x_used_by"
+      "x_trk_comp_asset"
+      "x_studio_field_0Zdfz"
+      "x_name"
+      "x_trk_comp_serial"
+      "x_trj_comp_issue" #This is a typo in Odoo, not here
+      "x_trk_comp_cpu"
+      "x_trk_comp_gpu"
+      "x_trk_comp_storage"
+      "x_trk_comp_mem_total"
+      "x_trk_comp_os"
+      "x_trk_comp_includes_camera"
+      "x_trk_memory_slots"
+      "x_trk_modern_data"
+      )
+
+      $trkCompHeader = ""
+
+      $trkCompFieldHeadings | ForEach-Object {if (-not $trkCompHeader) {
+        $trkCompHeader += $_
+      } else {
+        $trkCompHeader += ",$_"
+      }}
+    
+      $trkCompHeader | Out-File -FilePath .\$FileName
+  } -Process{
+    "$($InputObject.UsedBy),$($InputObject.AssetTag),$($InputObject.Make),$($InputObject.Model),$($InputObject.SerialNumber),$($InputObject.FirstLogon),$($InputObject.CPU),$($InputObject.GPU),$($InputObject.TotalStorage),$($InputObject.TotalMemory),$($InputObject.OperatingSystemBuild),$($InputObject.IncludesCamera),$($InputObject.MemorySlots),$True" | Out-File -FilePath .\$FileName
+  }
+}
+
+Export-ModuleMember -Function Get-CLIComputerSurvey,
+                              Export-CLIHardwareSurvey
