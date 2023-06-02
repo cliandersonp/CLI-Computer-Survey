@@ -1,8 +1,37 @@
+<#
+  .SYNOPSIS
+  Provides customized hardware data report.
+
+  .DESCRIPTION
+  Accepts CIMSessions to collect specific hardware data, such as UsedBy, AssetTag, Make, Model, SerialNumber, FirstLogon, CPU, GPU, TotalStorage, OperatingSystemBuild, IncludedCamera, and availble MemorySlots for the usage of CLI hardware data collection. 
+
+  .PARAMETER CimSession
+  Accepts Microsoft.Management.Infrastructure.CimSession objects, or collection ob objects. Accepts Pipeline
+
+  .PARAMETER FindComputers
+  For ease of use, the user doesn't need to provide their own cimsessions. The FindComputers switch will attempt to use Get-ADComputers to get a list of computernames that it will try and make CIMSessions for. If a CIMSession cannot be created, the function will silently continue and work only with what CIMSessions it can establish. 
+
+  .PARAMETER Filter
+  Filter passes to Get-ADComputer only if FindComputer flag is enabled and is ignored otherwise. For additional information about Active Directory filters, visit https://learn.microsoft.com/en-us/previous-versions/windows/server/hh531527(v=ws.10) 
+
+  .EXAMPLE
+  # Starts working for all devices accessible on the network
+  Get-CLIComputerSurvey -FindComputers
+
+  .EXAMPLE
+  # Creates a new CIMSession in-line to collect data for single computer
+  Get-CLIComputerSurvey -CimSession (New-CimSession <ComputerName>)
+
+  .EXAMPLE
+  # Pipe in CIMSessions from Get-CimSession
+  Get-CimSession | Get-CLIComputerSurvey
+
+#>
 function Get-CLIComputerSurvey {
   # Define parameters.
   param(
     # [Microsoft.Management.Infrastructure.CimSession]$cimsession
-    [Parameter(ValueFromPipeline=$true)]$cimsession,
+    [Parameter(ValueFromPipeline=$true)]$CimSession,
     [switch]$FindComputers,
     $Filter = "*"
   )
@@ -30,7 +59,7 @@ function Get-CLIComputerSurvey {
     # Check if get-computer is available
     if (Get-Command Get-ADComputer) {
       $computerName = (Get-ADComputer -Filter $Filter).Name
-      $computerName | ForEach-Object {New-CimSession $_}
+      $computerName | ForEach-Object {New-CimSession $_ -ErrorAction SilentlyContinue}
       $cimsession = Get-CimSession
     }else {
       Write-Error -Category NotInstalled -Message "Get-ADComputer ActiveDirectory Module is not present. Please install or import ActiveDirectory before performing this operation"
