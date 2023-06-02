@@ -11,6 +11,15 @@ function Get-CLIComputerSurvey {
     return
   }
 
+  $cimsession | ForEach-Object {
+    if ($_.GetType().Name -ne "CimSession") {
+      Write-Error -Category InvalidData -Message "Not All Values given are CimSession"
+      return
+    }
+  }
+
+
+  # Output Array holds the custom system objects until all cimsessions are complete and the result may be posted
   $OutputArray = @()
 
   $cimsession | ForEach-Object -Process {
