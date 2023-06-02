@@ -2,19 +2,38 @@ function Get-CLIComputerSurvey {
   # Define parameters.
   param(
     # [Microsoft.Management.Infrastructure.CimSession]$cimsession
-    $cimsession
+    [Parameter(ValueFromPipeline=$true)]$cimsession,
+    [switch]$FindComputers,
+    $Filter = "*"
   )
 
-  # Data Validation Checking. Script should only work if a cimsession is provided
-  if (-not $cimsession){
-    Write-Error -Category NotSpecified -Message "CimSession Not Given"
+  # Checks that either $Cimsession or $Findcomputers is defined. 
+  if (-not ($cimsession -or $FindComputers)){
+    Write-Error -Category NotSpecified -Message "Function requires either imported CIM Sessions or Find Computer parameters to be defined"
     return
   }
-
-  $cimsession | ForEach-Object {
-    if ($_.GetType().Name -ne "CimSession") {
-      Write-Error -Category InvalidData -Message "Not All Values given are CimSession"
+  
+  if (-not $FindComputers) {
+    # Data Validation Checking. Script should only work if a cimsession is provided
+    if (-not $cimsession){
+      Write-Error -Category NotSpecified -Message "CimSession Not Given"
       return
+    }
+  
+    $cimsession | ForEach-Object {
+      if ($_.GetType().Name -ne "CimSession") {
+        Write-Error -Category InvalidData -Message "Not All Values given are CimSession"
+        return
+      }
+    }
+  }else {
+    # Check if get-computer is available
+    if (Get-Command Get-ADComputer) {
+      $computerName = (Get-ADComputer -Filter $Filter).Name
+      $computerName | ForEach-Object {New-CimSession $_}
+      $cimsession = Get-CimSession
+    }else {
+      Write-Error -Category NotInstalled -Message "Get-ADComputer ActiveDirectory Module is not present. Please install or import ActiveDirectory before performing this operation"
     }
   }
 
