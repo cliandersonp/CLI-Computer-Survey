@@ -148,7 +148,7 @@ function Get-CLIComputerSurvey {
 }
 
 
-function Export-CLIHardwareSurvey {
+function Export-CLIComputerSurvey {
   param (
     [Parameter(ValueFromPipeline=$true)][System.Object]$InputObject,
     $FileName = "$((HOSTNAME.EXE).tostring())-trk-comp.csv"
@@ -219,4 +219,4 @@ function Export-CLIHardwareSurvey {
 }
 
 Export-ModuleMember -Function Get-CLIComputerSurvey,
-                              Export-CLIHardwareSurvey
+                              Export-CLIComputerSurvey
