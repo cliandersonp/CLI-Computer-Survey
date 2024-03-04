@@ -120,7 +120,7 @@ function Get-CLIComputerSurvey {
     
     # Secondary Definitions
     if (-not $assetTag){
-      $hostname = (HOSTNAME.EXE).tostring()
+      $hostname = (Get-CimInstance Win32_ComputerSystem -CimSession $sess | Select-Object -ExpandProperty Name).tostring()
       if ($hostname -match "\w\w\w-[dlw]-\d\d\d\d") {
         $assetTag = $hostname -replace "[^0-9]", ""
       }
