@@ -35,11 +35,20 @@ function Get-CLIComputerSurvey {
     [switch]$FindComputers,
     $Filter = "*"
   )
+  $Remove_Localhost_CIM_Session = $false
 
   # Checks that either $Cimsession or $Findcomputers is defined. 
   if (-not ($cimsession -or $FindComputers)){
-    Write-Error -Category NotSpecified -Message "Function requires either imported CIM Sessions or Find Computer parameters to be defined"
-    return
+    if ((Get-CimSession localhost -ErrorAction SilentlyContinue).length) {
+      $CimSession = Get-CimSession localhost
+    }
+    else {
+      $cimsession = New-CimSession localhost
+      $Remove_Localhost_CIM_Session = $true
+    }
+
+    # Write-Error -Category NotSpecified -Message "Function requires either imported CIM Sessions or Find Computer parameters to be defined"
+    # return
   }
   
   if (-not $FindComputers) {
@@ -144,6 +153,10 @@ function Get-CLIComputerSurvey {
     }
   } # End Foreach-Object
 
+  if ($Remove_Localhost_CIM_Session) {
+    Get-CimSession localhost | Remove-CimSession
+  }
+
   return $OutputArray
 }
 
@@ -214,7 +227,7 @@ function Export-CLIComputerSurvey {
     
       $trkCompHeader | Out-File -FilePath .\$FileName
   } -Process{
-    "$($InputObject.UsedBy),$($InputObject.AssetTag),$($InputObject.Make),$($InputObject.Model),$($InputObject.SerialNumber),$($InputObject.FirstLogon),$($InputObject.CPU),$($InputObject.GPU),$($InputObject.TotalStorage),$($InputObject.TotalMemory),$($InputObject.OperatingSystemBuild),$($InputObject.IncludesCamera),$($InputObject.MemorySlots),$True" | Out-File -FilePath .\$FileName
+    "$($InputObject.UsedBy),$($InputObject.AssetTag),$($InputObject.Make),$($InputObject.Model),$($InputObject.SerialNumber),$($InputObject.FirstLogon),$($InputObject.CPU),$($InputObject.GPU),$($InputObject.TotalStorage),$($InputObject.TotalMemory),$($InputObject.OperatingSystemBuild),$($InputObject.IncludesCamera),$($InputObject.MemorySlots),$True" | Out-File -Append -FilePath .\$FileName
   }
 }
 
