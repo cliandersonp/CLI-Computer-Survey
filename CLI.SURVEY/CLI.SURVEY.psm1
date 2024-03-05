@@ -201,7 +201,7 @@ function Export-CLIComputerSurvey {
   # process input opbject.
   $InputObject | ForEach-Object -Begin {
     $trkCompFieldHeadings = @(
-      "x_used_by"
+      "x_trk_comp_sam_name"
       "x_trk_comp_asset"
       "x_studio_field_0Zdfz"
       "x_name"
@@ -227,7 +227,7 @@ function Export-CLIComputerSurvey {
     
       $trkCompHeader | Out-File -FilePath .\$FileName
   } -Process{
-    "$($InputObject.UsedBy),$($InputObject.AssetTag),$($InputObject.Make),$($InputObject.Model),$($InputObject.SerialNumber),$($InputObject.FirstLogon),$($InputObject.CPU),$($InputObject.GPU),$($InputObject.TotalStorage),$($InputObject.TotalMemory),$($InputObject.OperatingSystemBuild),$($InputObject.IncludesCamera),$($InputObject.MemorySlots),$True" | Out-File -Append -FilePath .\$FileName
+    "$($InputObject.UsedBy),$($InputObject.AssetTag),$($InputObject.Make),$($InputObject.Model),$($InputObject.SerialNumber),$($InputObject.FirstLogon),$($InputObject.CPU),$($InputObject.GPU),$([math]::floor($InputObject.TotalStorage)),$([math]::floor($InputObject.TotalMemory)),$($InputObject.OperatingSystemBuild),$($InputObject.IncludesCamera),$($InputObject.MemorySlots),$True" | Out-File -Append -FilePath .\$FileName
   }
 }
 
